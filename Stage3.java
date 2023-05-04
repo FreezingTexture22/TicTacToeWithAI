@@ -4,44 +4,231 @@ import java.util.Scanner;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-public class Stage2 {
+public class Stage3 {
 	static boolean inputError = true;
 	static boolean gameEnded = false;
+	static boolean gameExit = false;
 	static String[][] board = new String[3][3];
 	static String input;
 	static int c1 = 0;
 	static int c2 = 0;
 	static int countX = 0;
 	static int countO = 0;
-	static boolean firstPlayerActive = true;
 	static boolean playerXWon = false;
 	static boolean playerOWon = false;
+	static String gameMode;
 
 	public static void main(String[] args) {
-				
+
+		do {
+			
+			resetParameters();
+			
+			switch (gameModeSelect()) {
+			case "PvP":
+				modePvP();
+				break;
+
+			case "CvC":
+				modeCvC();
+				break;
+
+			case "PvC":
+				modePvC();
+				break;
+
+			case "CvP":
+				modeCvP();
+				break;
+
+			case "exit":
+				gameExit = true;
+				break;
+
+			default:
+				System.out.println();
+			}
+			
+		} while (!gameExit);
+
+	}
+
+//
+//
+//
+// reset all parameters to default state
+	private static void resetParameters() {
+
+		gameEnded = false;
+		countX = 0;
+		countO = 0;
+		playerXWon = false;
+		playerOWon = false;
+
+	}
+
+//
+//
+//
+// game mode CompX vs PlayerO
+	private static void modeCvP() {
 		// start game, generate board, print board
 		generateBoard();
 		boardPrint(); // print board state
-		
+
+		// loop until game not ended
+		do {
+			// comp X turn, if game not ended
+			if (!gameEnded) {
+				computerTurn("X");
+				boardPrint(); // print updated board state
+				checkGameState(); // check if any player win or game is draw
+			}
+
+			// player O turn, if game not ended
+			if (!gameEnded) {
+				playerTurn("O"); // request coordinates (start from X)
+				boardPrint(); // print updated board state
+				checkGameState(); // check if any player win or game is draw
+			}
+		} while (!gameEnded);
+	}
+
+
+//
+//
+//
+// game mode PlayerX vs CompO
+	private static void modePvC() {
+		// start game, generate board, print board
+		generateBoard();
+		boardPrint(); // print board state
+
 		// loop until game not ended
 		do {
 			// player X turn, if game not ended
 			if (!gameEnded) {
-				
-				enterCoordinates(); // request coordinates (start from X)
+				playerTurn("X"); // request coordinates (start from X)
 				boardPrint(); // print updated board state
 				checkGameState(); // check if any player win or game is draw
 			}
 
-			// computers turn, if game not ended
+			// comp O turn, if game not ended
 			if (!gameEnded) {
-				computerTurn();
+				computerTurn("O");
 				boardPrint(); // print updated board state
 				checkGameState(); // check if any player win or game is draw
 			}
-
 		} while (!gameEnded);
 	}
+
+
+//
+//
+//
+// game mode CompX vs CompO
+private static void modeCvC() {
+	// start game, generate board, print board
+	generateBoard();
+	boardPrint(); // print board state
+
+	// loop until game not ended
+	do {
+		// comp X turn, if game not ended
+		if (!gameEnded) {
+			computerTurn("X"); // request coordinates (start from X)
+			boardPrint(); // print updated board state
+			checkGameState(); // check if any player win or game is draw
+		}
+
+		// comp O turn, if game not ended
+		if (!gameEnded) {
+			computerTurn("O");
+			boardPrint(); // print updated board state
+			checkGameState(); // check if any player win or game is draw
+		}
+	} while (!gameEnded);
+}
+		
+
+
+
+//
+//
+//
+// game mode PlayerX vs PlayerO
+	private static void modePvP() {
+		// start game, generate board, print board
+		generateBoard();
+		boardPrint(); // print board state
+	
+		// loop until game not ended
+		do {
+			// player X turn, if game not ended
+			if (!gameEnded) {	
+				playerTurn("X"); // request coordinates (start from X)
+				boardPrint(); // print updated board state
+				checkGameState(); // check if any player win or game is draw
+			}
+	
+			// player O turn, if game not ended
+			if (!gameEnded) {
+				playerTurn("O");
+				boardPrint(); // print updated board state
+				checkGameState(); // check if any player win or game is draw
+			}
+		} while (!gameEnded);
+	
+	}
+
+//
+//
+//
+// select game mode: 
+	// - playerX vs playerO (PvP)
+	// - compX vs compO (CvC)
+	// - playerX vs compO (PvC)
+	// - compX vs playerO (CvP)
+	private static String gameModeSelect() {
+		
+		String output = "";
+		boolean badParam = false;
+		
+		do {
+			badParam = false;
+			
+			Scanner scanner = new Scanner(System.in);
+			System.out.print("Input command: ");
+			String input = scanner.nextLine();
+			
+			if (input.equals("start user user")) {
+				output = "PvP";
+								
+			} else if (input.equals("start easy easy")) {
+				output = "CvC";
+				
+			} else if (input.equals("start user easy")) {
+				output = "PvC";
+				
+			} else if (input.equals("start easy user")) {
+				output = "CvP";
+				
+			} else if(input.equals("exit")) {
+				output = "exit";
+				
+			} else {
+				System.out.println("Bad parameters!");
+				badParam = true;
+			}
+		
+		} while (badParam);
+		
+		return output;
+		
+	}
+
+
+
 
 //
 //
@@ -94,7 +281,7 @@ public class Stage2 {
 //
 //
 	// human player enter coordinates
-	private static void enterCoordinates() {
+	private static void playerTurn(String xo) {
 		boolean inputError = true;
 		System.out.print("Enter the coordinates: ");
 
@@ -136,8 +323,8 @@ public class Stage2 {
 				} 								
 			}
 			
-			if (!inputError && firstPlayerActive && board[c1-1][c2-1].equals(" ")) {
-				board[c1-1][c2-1] = "X";
+			if (!inputError && board[c1-1][c2-1].equals(" ")) {
+				board[c1-1][c2-1] = xo;
 				countX++;
 			} else if (!inputError){
 				System.out.println("This cell is occupied! Choose another one!");
@@ -152,7 +339,7 @@ public class Stage2 {
 //
 //
 	// computer makes a move
-	private static void computerTurn() {		
+	private static void computerTurn(String xo) {		
 		System.out.println("Making move level \"easy\"");		
 		boolean inputError = true;
 		
@@ -161,7 +348,7 @@ public class Stage2 {
 			int randomNum2 = ThreadLocalRandom.current().nextInt(0, 3); // generate random number in range 0-2
 			
 			if (board[randomNum1][randomNum2].equals(" ")) {
-				board[randomNum1][randomNum2] = "O";
+				board[randomNum1][randomNum2] = xo;
 				countO++;
 				inputError = false;
 			} 
@@ -181,14 +368,17 @@ public class Stage2 {
 		
 		if ((countX + countO == 9) && !playerOWon && !playerXWon) {
 			System.out.println("Draw");
+			System.out.println();
 		}
 		
 		if (playerOWon) {
 			System.out.println("O wins");
+			System.out.println();
 		}
 		
 		if (playerXWon) {
 			System.out.println("X wins");
+			System.out.println();
 		}
 		
 	}
